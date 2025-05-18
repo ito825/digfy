@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import ForceGraph2D from "react-force-graph-2d";
-import { Download, Library } from "lucide-react";
+import { Download, Library, ZoomIn, ZoomOut, ScanSearch } from "lucide-react";
+import * as d3 from "d3";
 
 type NodeType = {
   id: string;
@@ -29,6 +30,7 @@ function ArtistVisualizer() {
   const fgRef = useRef<any>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [graphWidth, setGraphWidth] = useState(1000);
+  const [hoverNode, setHoverNode] = useState<string | null>(null);
 
   useEffect(() => {
     const updateWidth = () => {
@@ -58,14 +60,29 @@ function ArtistVisualizer() {
 
       const data = await response.json();
       if (response.ok) {
-        data.nodes = data.nodes.map((node: any) =>
-          node.id === targetArtist
-            ? { ...node, fx: 0, fy: 0, color: "#f87171" }
-            : node
-        );
+        const colorMap: Record<number, string> = {
+          0: "#c44569", // 中心：ローズレッド
+          1: "#574b90", // レベル1：スモーキーパープル
+          2: "#3dc1d3", // レベル2：ミントブルー
+          3: "#f78fb3", // レベル3：落ち着いたピンク（グレーの代わり）
+        };
+
+        data.nodes = data.nodes.map((node: any) => ({
+          ...node,
+          fx: node.id === targetArtist ? 0 : undefined,
+          fy: node.id === targetArtist ? 0 : undefined,
+          color: colorMap[node.group] || "#a3a3a3",
+        }));
         setArtist(targetArtist);
         setGraphData(data);
         fetchDeezerPreview(targetArtist);
+
+        if (wrapperRef.current) {
+          wrapperRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
       } else {
         alert(data.error || "エラーが発生しました");
       }
@@ -74,6 +91,13 @@ function ArtistVisualizer() {
       alert("通信に失敗しました");
     } finally {
       setIsLoading(false);
+    }
+  };
+  const handleNodeHover = (node: any) => {
+    if (node) {
+      setHoverNode(node.id);
+    } else {
+      setHoverNode(null);
     }
   };
 
@@ -159,10 +183,28 @@ function ArtistVisualizer() {
 
   useEffect(() => {
     if (fgRef.current) {
-      setTimeout(() => fgRef.current.zoomToFit(400, 40), 300);
+      setTimeout(() => {
+        fgRef.current.zoom(3.0, 0); // 倍率, アニメーション時間(ms)
+        fgRef.current.centerAt(0, 0, 0); // 中央に合わせる（任意）
+      }, 300);
     }
   }, [graphData]);
 
+  useEffect(() => {
+    if (fgRef.current) {
+      // ノード間の引き離し力
+      fgRef.current.d3Force("charge")?.strength(-100);
+
+      // リンクの長さ（間隔）
+      fgRef.current.d3Force("link")?.distance(160);
+
+      // ノードが重ならないようにする
+      fgRef.current.d3Force(
+        "collide",
+        d3.forceCollide().radius(35).strength(1) //ノードサイズに合わせて衝突距離調整
+      );
+    }
+  }, [graphData]);
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-4 relative">
       <h1 className="text-xl font-bold mb-2 mt-1">関連アーティストを可視化</h1>
@@ -250,14 +292,25 @@ function ArtistVisualizer() {
           graphData={graphData}
           nodeLabel={(node: any) => node.id}
           nodeAutoColorBy="id"
-          linkColor={() => "rgba(255,255,255,0.4)"}
-          linkWidth={0.5}
-          {...{ linkDistance: 120, cooldownTicks: 100, nodeRelSize: 6 }}
-          nodeRelSize={8}
+          onNodeHover={(node) => setHoverNode(node?.id || null)}
+          linkColor={(link: any) =>
+            hoverNode &&
+            (link.source.id === hoverNode || link.target.id === hoverNode)
+              ? "rgba(255, 255, 255, 0.5)"
+              : "rgba(255, 255, 255, 0)"
+          }
+          linkWidth={(link: any) =>
+            hoverNode &&
+            (link.source.id === hoverNode || link.target.id === hoverNode)
+              ? 1.5
+              : 0
+          }
+          {...{ linkDistance: 180, cooldownTicks: 100, nodeRelSize: 14 }}
+          nodeRelSize={14}
           nodeCanvasObject={(node: any, ctx, globalScale) => {
-            const fontSize = 10 / globalScale;
+            const fontSize = 14 / globalScale;
             const label = node.id;
-            const radius = 15;
+            const radius = node.size || 16;
             ctx.beginPath();
             ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI);
             ctx.fillStyle = node.color || "gray";
@@ -277,6 +330,36 @@ function ArtistVisualizer() {
             handleSubmit(undefined, node.id);
           }}
         />
+
+        <div className="absolute top-4 left-4 flex space-x-2 z-20">
+          <button
+            onClick={() => {
+              const currentZoom = fgRef.current.zoom();
+              fgRef.current.zoom(currentZoom * 1.2, 400);
+            }}
+            className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 shadow"
+            title="拡大"
+          >
+            <ZoomIn size={20} />
+          </button>
+          <button
+            onClick={() => {
+              const currentZoom = fgRef.current.zoom();
+              fgRef.current.zoom(currentZoom * 0.8, 400);
+            }}
+            className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 shadow"
+            title="縮小"
+          >
+            <ZoomOut size={20} />
+          </button>
+          <button
+            onClick={() => fgRef.current.zoomToFit(1000, 40)}
+            className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 shadow"
+            title="全体表示"
+          >
+            <ScanSearch size={20} />
+          </button>
+        </div>
       </div>
 
       {previewUrl && (

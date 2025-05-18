@@ -58,6 +58,10 @@ class DeezerInfo:
             return 'royalblue'
 
     def draw_related_map(self, name, level=2):
+        # 毎回初期化
+        self.G.clear()
+        self.popularity_list.clear()
+
         artist_id = self.get_artist_id(name)
         if not artist_id:
             return None, None
@@ -69,17 +73,26 @@ class DeezerInfo:
         if level >= 2:
             for name2 in df.index.tolist():
                 tmp_df = self.get_related_artist_info(df.loc[name2, 'id'])[:5]
+                print(f"レベル2: {name2} -> {tmp_df.index.tolist()}")
                 self.add_nodes(tmp_df)
                 self.add_edges(name2, tmp_df)
 
+                if level >= 3:
+                    for name3 in tmp_df.index.tolist():
+                        tmp_df_2 = self.get_related_artist_info(tmp_df.loc[name3, 'id'])[:5]
+                        print(f"レベル3: {name3} -> {tmp_df_2.index.tolist()}") 
+                        self.add_nodes(tmp_df_2)
+                        self.add_edges(name3, tmp_df_2)
+
+        # 描画処理
         plt.figure(figsize=[30, 30])
         pos = nx.spring_layout(
-        self.G,
-        seed=42,
-        k=0.5,
-        center=(0, 0),
-        pos={name: [0.0, 0.0]}  # ← 検索アーティストを中央に配置
-    )
+            self.G,
+            seed=42,
+            k=0.5,
+            center=(0, 0),
+            pos={name: [0.0, 0.0]}
+        )
         nx.draw_networkx_nodes(
             self.G, pos,
             node_size=[nx.degree_centrality(self.G)[i]*20000 for i in self.G.nodes],
@@ -99,23 +112,81 @@ class DeezerInfo:
         graph = base64.b64encode(image_png).decode('utf-8')
         html_display = f'<img src="data:image/png;base64,{graph}" alt="Artist Network">'
         return html_display, graph
-    
-    def get_graph_json(self, name, level=2):
-        artist_id = self.get_artist_id(name)
+ 
+    def get_graph_json(self, name):
+        self.G.clear()
+        self.popularity_list.clear()
+        visited = set()
+
+        artist_id = self.get_artist_id(name.strip())
         if not artist_id:
             return None
 
-        df = self.get_related_artist_info(artist_id)[:5]
+        level_0 = set()
+        level_1 = set()
+        level_2 = set()
+
+        # レベル0（中心）
+        df = self.get_related_artist_info(artist_id)[:10]
         self.add_nodes(df, root=True, root_name=name)
         self.add_edges(name, df)
+        level_0.add(name)
+        visited.add(name)
 
-        if level >= 2:
-            for name2 in df.index.tolist():
-                tmp_df = self.get_related_artist_info(df.loc[name2, 'id'])[:5]
-                self.add_nodes(tmp_df)
-                self.add_edges(name2, tmp_df)
+        # レベル1
+        for name1 in df.index.tolist():
+            if name1 in visited:
+                continue
+            visited.add(name1)
+            level_1.add(name1)
 
-        nodes = [{"id": node, "group": 1} for node in self.G.nodes]
+            tmp_df = self.get_related_artist_info(df.loc[name1, 'id'])[:10]
+            self.add_nodes(tmp_df)
+            self.add_edges(name1, tmp_df)
+
+            # レベル2
+            for name2 in tmp_df.index.tolist():
+                if name2 in visited:
+                    continue
+                visited.add(name2)
+                level_2.add(name2)
+
+                tmp_df2 = self.get_related_artist_info(tmp_df.loc[name2, 'id'])[:10]
+                self.add_nodes(tmp_df2)
+                self.add_edges(name2, tmp_df2)
+
+        # レベル・サイズを決めるロジック
+        def get_level(node):
+            if node in level_0:
+                return 0
+            elif node in level_1:
+                return 1
+            elif node in level_2:
+                return 2
+            else:
+                return 3
+
+        def get_size(level):
+            if level == 0:
+                return 28
+            elif level == 1:
+                return 22
+            elif level == 2:
+                return 16
+            else:
+                return 12
+
+        nodes = []
+        for node in self.G.nodes:
+            level = get_level(node)
+            nodes.append({
+                "id": node,
+                "group": level,
+                "level": level,
+                "size": get_size(level)
+            })
+
         links = [{"source": s, "target": t} for s, t in self.G.edges]
 
         return {"nodes": nodes, "links": links}
+

@@ -11,20 +11,21 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
-class RelatedArtistsAPIView(APIView):
+class RelatedGraphJSONAPIView(APIView):
     def post(self, request):
-        artist_name = request.data.get('artist')
-        level = int(request.data.get('level', 2))
+        artist_name = request.data.get("artist")
 
         if not artist_name:
-            return Response({'error': 'Artist name is required.'}, status=400)
+            return Response({"error": "Artist name is required"}, status=400)
 
         deezer = DeezerInfo()
-        graph_data = deezer.get_graph_data(artist_name, level=level)
-        if not graph_data:
-            return Response({'error': 'Artist not found.'}, status=404)
+        graph_data = deezer.get_graph_json(artist_name)
+
+        if graph_data is None:
+            return Response({"error": "Artist not found"}, status=404)
 
         return Response(graph_data)
+
 
 class SignupAPIView(APIView):
     def post(self, request):
@@ -81,18 +82,21 @@ class SaveNetworkAPIView(APIView):
 class RelatedGraphJSONAPIView(APIView):
     def post(self, request):
         artist_name = request.data.get("artist")
-        level = int(request.data.get("level", 2))
 
         if not artist_name:
             return Response({"error": "Artist name is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        deezer = DeezerInfo()
-        graph_data = deezer.get_graph_json(artist_name, level=level)
+        try:
+            deezer = DeezerInfo()
+            graph_data = deezer.get_graph_json(artist_name)
 
-        if not graph_data:
-            return Response({"error": "Artist not found"}, status=status.HTTP_404_NOT_FOUND)
+            if graph_data is None:
+                return Response({"error": "Artist not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(graph_data)  
+            return Response(graph_data)
+        except Exception as e:
+            print("例外発生:", e)
+            return Response({"error": "Internal server error", "detail": str(e)}, status=500)
 class UpdateNetworkAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
