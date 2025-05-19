@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import ForceGraph2D from "react-force-graph-2d";
-import { Download, Library, ZoomIn, ZoomOut, ScanSearch } from "lucide-react";
+import { Camera, Library, ZoomIn, ZoomOut, ScanSearch } from "lucide-react";
 import * as d3 from "d3";
 
 type NodeType = {
@@ -31,6 +31,7 @@ function ArtistVisualizer() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [graphWidth, setGraphWidth] = useState(1000);
   const [hoverNode, setHoverNode] = useState<string | null>(null);
+  const [showAllLinks, setShowAllLinks] = useState(false);
 
   useEffect(() => {
     const updateWidth = () => {
@@ -61,10 +62,10 @@ function ArtistVisualizer() {
       const data = await response.json();
       if (response.ok) {
         const colorMap: Record<number, string> = {
-          0: "#c44569", // 中心：ローズレッド
-          1: "#574b90", // レベル1：スモーキーパープル
-          2: "#3dc1d3", // レベル2：ミントブルー
-          3: "#f78fb3", // レベル3：落ち着いたピンク（グレーの代わり）
+          0: "#c44569", // レベル0：ローズレッド（中心）
+          1: "#8e44ad", // レベル1：ディープパープル
+          2: "#3498db", // レベル2：ビビッドブルー
+          3: "#1abc9c", // レベル3：エメラルドグリーン
         };
 
         data.nodes = data.nodes.map((node: any) => ({
@@ -109,7 +110,24 @@ function ArtistVisualizer() {
     link.href = (canvas as HTMLCanvasElement).toDataURL("image/png");
     link.click();
   };
+  const refreshToken = async () => {
+    const refresh = localStorage.getItem("refresh");
+    if (!refresh) return false;
 
+    const res = await fetch("http://localhost:8000/api/token/refresh/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      localStorage.setItem("access", data.access);
+      return true;
+    } else {
+      return false;
+    }
+  };
   const saveToLibrary = async () => {
     try {
       const memo = prompt("このネットワークに関するメモを入力してください:");
@@ -130,6 +148,12 @@ function ArtistVisualizer() {
       const canvas = document.querySelector("canvas") as HTMLCanvasElement;
       const image_base64 = canvas ? canvas.toDataURL("image/png") : "";
 
+      // トークンをリフレッシュ
+      const ok = await refreshToken();
+      if (!ok) {
+        alert("ログインセッションが切れています。再ログインしてください。");
+        return;
+      }
       const res = await fetch("http://localhost:8000/api/save-network/", {
         method: "POST",
         headers: {
@@ -256,24 +280,53 @@ function ArtistVisualizer() {
           )}
         </div>
 
-        <div className="w-full max-w-6xl flex justify-end items-center -mt-2 mb-4 pr-2 space-x-2">
-          <button
-            onClick={downloadImage}
-            className="p-2 bg-gray-700 text-white rounded-full hover:bg-gray-600 shadow"
-            title="画像をダウンロード"
-          >
-            <Download size={20} />
-          </button>
-          <button
-            onClick={saveToLibrary}
-            className="p-2 bg-gray-700 text-white rounded-full hover:bg-gray-600 shadow"
-            title="マイライブラリに保存"
-          >
-            <Library size={20} />
-          </button>
+        <div className="w-full max-w-6xl flex justify-between items-center -mt-2 mb-4 px-2">
+          {/* レジェンド左側 */}
+          <div className="flex items-center space-x-4 text-sm text-gray-300">
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded-full bg-[#c44569] border border-white" />
+              <span>中心</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded-full bg-[#8e44ad] border border-white" />
+              <span>関連度高</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded-full bg-[#3498db] border border-white" />
+              <span>中</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded-full bg-[#1abc9c] border border-white" />
+              <span>低</span>
+            </div>
+          </div>
+
+          {/* 右上ボタン群 */}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowAllLinks(!showAllLinks)}
+              className="p-2 bg-gray-700 text-white rounded-full hover:bg-gray-600 shadow"
+              title="エッジ表示切替"
+            >
+              {showAllLinks ? "⇄ Hover表示" : "⇄ 全表示"}
+            </button>
+            <button
+              onClick={downloadImage}
+              className="p-2 bg-gray-700 text-white rounded-full hover:bg-gray-600 shadow"
+              title="今見えているネットワークをキャプチャ"
+            >
+              <Camera size={20} />
+            </button>
+            <button
+              onClick={saveToLibrary}
+              className="p-2 bg-gray-700 text-white rounded-full hover:bg-gray-600 shadow"
+              title="マイライブラリに保存"
+            >
+              <Library size={20} />
+            </button>
+          </div>
         </div>
       </div>
-
       <div
         ref={wrapperRef}
         className="w-full max-w-6xl h-[600px] border border-gray-700 rounded overflow-hidden mb-4 relative"
@@ -294,14 +347,16 @@ function ArtistVisualizer() {
           nodeAutoColorBy="id"
           onNodeHover={(node) => setHoverNode(node?.id || null)}
           linkColor={(link: any) =>
-            hoverNode &&
-            (link.source.id === hoverNode || link.target.id === hoverNode)
+            showAllLinks ||
+            (hoverNode &&
+              (link.source.id === hoverNode || link.target.id === hoverNode))
               ? "rgba(255, 255, 255, 0.5)"
               : "rgba(255, 255, 255, 0)"
           }
           linkWidth={(link: any) =>
-            hoverNode &&
-            (link.source.id === hoverNode || link.target.id === hoverNode)
+            showAllLinks ||
+            (hoverNode &&
+              (link.source.id === hoverNode || link.target.id === hoverNode))
               ? 1.5
               : 0
           }
@@ -330,6 +385,13 @@ function ArtistVisualizer() {
             handleSubmit(undefined, node.id);
           }}
         />
+
+        {/* 右上説明ラベル */}
+        {!hoverNode && (
+          <div className="absolute top-4 right-4 text-sm text-gray-400 bg-gray-800 bg-opacity-80 px-3 py-1 rounded shadow z-30">
+            気になる名前に触れて、音楽のつながりを見てみよう
+          </div>
+        )}
 
         <div className="absolute top-4 left-4 flex space-x-2 z-20">
           <button
