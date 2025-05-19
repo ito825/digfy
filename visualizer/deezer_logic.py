@@ -64,7 +64,7 @@ class DeezerInfo:
         level_2 = set()
 
         # レベル0（中心）
-        df = self.get_related_artist_info(artist_id)[:10]
+        df = self.get_related_artist_info(artist_id)[:5]
         self.add_nodes(df, root=True, root_name=name)
         self.add_edges(name, df)
         level_0.add(name)
@@ -78,7 +78,7 @@ class DeezerInfo:
             visited.add(name1)
             level_1.add(name1)
 
-            tmp_df = self.get_related_artist_info(df.loc[name1, 'id'])[:10]
+            tmp_df = self.get_related_artist_info(df.loc[name1, 'id'])[:5]
             self.add_nodes(tmp_df)
             self.add_edges(name1, tmp_df)
 
@@ -89,7 +89,7 @@ class DeezerInfo:
                 visited.add(name2)
                 level_2.add(name2)
 
-                tmp_df2 = self.get_related_artist_info(tmp_df.loc[name2, 'id'])[:10]
+                tmp_df2 = self.get_related_artist_info(tmp_df.loc[name2, 'id'])[:5]
                 self.add_nodes(tmp_df2)
                 self.add_edges(name2, tmp_df2)
 

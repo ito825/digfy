@@ -5,9 +5,11 @@ function SavedList() {
   const [networks, setNetworks] = useState<any[]>([]);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [editMemo, setEditMemo] = useState("");
+  const [isLoading, setIsLoading] = useState(true); // ← ローディング状態を追加
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true); // ← 読み込み開始
       const res = await authFetch("http://localhost:8000/api/my-networks/");
       if (res && res.ok) {
         const data = await res.json();
@@ -15,6 +17,7 @@ function SavedList() {
       } else {
         alert("保存されたネットワークの取得に失敗しました");
       }
+      setIsLoading(false); // ← 読み込み終了
     };
     fetchData();
   }, []);
@@ -64,7 +67,9 @@ function SavedList() {
     <div className="p-6 min-h-screen bg-gray-900 text-white">
       <h1 className="text-3xl font-bold mb-6">マイライブラリ</h1>
 
-      {networks.length === 0 ? (
+      {isLoading ? (
+        <p className="text-gray-400">読み込み中...</p>
+      ) : networks.length === 0 ? (
         <p>保存データがありません</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">

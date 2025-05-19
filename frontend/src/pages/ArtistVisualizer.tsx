@@ -77,13 +77,6 @@ function ArtistVisualizer() {
         setArtist(targetArtist);
         setGraphData(data);
         fetchDeezerPreview(targetArtist);
-
-        if (wrapperRef.current) {
-          wrapperRef.current.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          });
-        }
       } else {
         alert(data.error || "エラーが発生しました");
       }
@@ -389,7 +382,8 @@ function ArtistVisualizer() {
         {/* 右上説明ラベル */}
         {!hoverNode && (
           <div className="absolute top-4 right-4 text-sm text-gray-400 bg-gray-800 bg-opacity-80 px-3 py-1 rounded shadow z-30">
-            気になる名前に触れて、音楽のつながりを見てみよう
+            気になる名前に触れて、音楽のつながりを見てみよう。
+            クリックで再探索。
           </div>
         )}
 

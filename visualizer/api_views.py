@@ -3,29 +3,33 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from .deezer_logic import DeezerInfo
 from .models import SavedNetwork
 from django.http import JsonResponse
 import requests
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+from .async_deezer import DeezerGraphBuilder
+import asyncio
+
+# -------------------- Related Artist API（キャッシュ付き） --------------------
 
 class RelatedGraphJSONAPIView(APIView):
     def post(self, request):
         artist_name = request.data.get("artist")
 
         if not artist_name:
-            return Response({"error": "Artist name is required"}, status=400)
+            return Response({"error": "Artist name is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        deezer = DeezerInfo()
-        graph_data = deezer.get_graph_json(artist_name)
+        builder = DeezerGraphBuilder()
 
-        if graph_data is None:
-            return Response({"error": "Artist not found"}, status=404)
+        try:
+            graph_data = asyncio.run(builder.build_graph(artist_name))
+        except Exception as e:
+            print("Async error:", e)
+            return Response({"error": "Failed to build graph", "detail": str(e)}, status=500)
 
         return Response(graph_data)
 
+# -------------------- サインアップ --------------------
 
 class SignupAPIView(APIView):
     def post(self, request):
@@ -41,6 +45,8 @@ class SignupAPIView(APIView):
         user = User.objects.create_user(username=username, password=password)
         return Response({"message": "User created"}, status=status.HTTP_201_CREATED)
 
+# -------------------- マイライブラリ取得 --------------------
+
 class MyNetworksAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -48,7 +54,7 @@ class MyNetworksAPIView(APIView):
         items = SavedNetwork.objects.filter(user=request.user).order_by('-created_at')
         data = [
             {
-                "id": item.id, 
+                "id": item.id,
                 "center_artist": item.center_artist,
                 "graph_json": item.graph_json,
                 "memo": item.memo,
@@ -58,6 +64,8 @@ class MyNetworksAPIView(APIView):
             for item in items
         ]
         return Response(data)
+
+# -------------------- 保存 --------------------
 
 class SaveNetworkAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -79,24 +87,9 @@ class SaveNetworkAPIView(APIView):
             image_base64=image_base64
         )
         return Response({"message": "保存しました"}, status=201)
-class RelatedGraphJSONAPIView(APIView):
-    def post(self, request):
-        artist_name = request.data.get("artist")
 
-        if not artist_name:
-            return Response({"error": "Artist name is required"}, status=status.HTTP_400_BAD_REQUEST)
+# -------------------- メモ更新 --------------------
 
-        try:
-            deezer = DeezerInfo()
-            graph_data = deezer.get_graph_json(artist_name)
-
-            if graph_data is None:
-                return Response({"error": "Artist not found"}, status=status.HTTP_404_NOT_FOUND)
-
-            return Response(graph_data)
-        except Exception as e:
-            print("例外発生:", e)
-            return Response({"error": "Internal server error", "detail": str(e)}, status=500)
 class UpdateNetworkAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -108,6 +101,9 @@ class UpdateNetworkAPIView(APIView):
             return Response({"message": "更新しました"}, status=200)
         except SavedNetwork.DoesNotExist:
             return Response({"error": "データが見つかりません"}, status=404)
+
+# -------------------- 削除（DELETE） --------------------
+
 class DeleteNetworkAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -115,9 +111,11 @@ class DeleteNetworkAPIView(APIView):
         try:
             item = SavedNetwork.objects.get(pk=pk, user=request.user)
             item.delete()
-            return Response({"message": "削除しました"}, status=200)
+            return Response({"message": "削除しました"}, status=204)
         except SavedNetwork.DoesNotExist:
             return Response({"error": "データが見つかりません"}, status=404)
+
+# -------------------- Deezer API プロキシ --------------------
 
 @csrf_exempt
 def deezer_proxy(request):
@@ -144,13 +142,3 @@ def deezer_artist_top(request):
         return JsonResponse(res.json(), safe=False)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-class DeleteNetworkAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def delete(self, request, pk):
-        try:
-            item = SavedNetwork.objects.get(pk=pk, user=request.user)
-            item.delete()
-            return Response({"message": "削除しました"}, status=204)
-        except SavedNetwork.DoesNotExist:
-            return Response({"error": "データが見つかりません"}, status=404)
