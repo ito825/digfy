@@ -67,7 +67,7 @@ function ArtistVisualizer() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("${BASE_URL}/api/graph-json/", {
+      const response = await fetch(`${BASE_URL}/api/graph-json/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ artist: targetArtist, level: 2 }),
@@ -126,7 +126,7 @@ function ArtistVisualizer() {
     const refresh = localStorage.getItem("refresh");
     if (!refresh) return false;
 
-    const res = await fetch("${BASE_URL}/api/token/refresh/", {
+    const res = await fetch(`${BASE_URL}/api/token/refresh/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh }),
@@ -163,7 +163,7 @@ function ArtistVisualizer() {
         return;
       }
 
-      const res = await authFetch("${BASE_URL}/api/save-network/", {
+      const res = await authFetch(`${BASE_URL}/api/save-network/`, {
         method: "POST",
         body: JSON.stringify({
           center_artist: artist,
