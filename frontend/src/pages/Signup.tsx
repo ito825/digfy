@@ -6,6 +6,7 @@ const Signup: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const navigate = useNavigate();
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -20,7 +21,12 @@ const Signup: React.FC = () => {
     const data = await response.json();
 
     if (response.ok) {
-      navigate("/login");
+      // 成功メッセージを表示してから遷移
+      setSuccess("✅ 登録成功しました！ログイン画面へ移動します…");
+      setError("");
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
     } else {
       setError(data.detail || "サインアップに失敗しました");
     }
@@ -60,6 +66,9 @@ const Signup: React.FC = () => {
           </div>
 
           {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+          {success && (
+            <p className="text-green-400 text-sm text-center">{success}</p>
+          )}
 
           <button
             type="submit"

@@ -5,23 +5,27 @@ import json
 
 class DeezerGraphBuilder:
     def __init__(self, max_nodes=60):
+        # 初期化：ノード・リンク・訪問済み集合・ノード上限
         self.nodes = {}
         self.links = []
         self.visited = set()
         self.max_nodes = max_nodes
 
-        # cache をこのファイルの隣に固定
+        # キャッシュディレクトリの作成
         base_dir = os.path.dirname(__file__)
         self.cache_dir = os.path.join(base_dir, "cache")
         os.makedirs(self.cache_dir, exist_ok=True)
 
+        # 非同期HTTPクライアントを初期化
         self.client = httpx.AsyncClient()
 
     def _cache_path(self, artist_name):
+        # キャッシュファイルのパスを返す
         filename = f"{artist_name.lower().replace(' ', '_')}.json"
         return os.path.join(self.cache_dir, filename)
 
     async def fetch_json(self, url):
+        # URLにアクセスしてJSONを返す（エラーハンドリング付き）
         try:
             response = await self.client.get(url, timeout=5.0)
             response.raise_for_status()
@@ -31,6 +35,7 @@ class DeezerGraphBuilder:
             return {}
 
     async def get_artist_id(self, name):
+        # アーティスト名からIDを取得
         url = f"https://api.deezer.com/search/artist?q={name}"
         data = await self.fetch_json(url)
         try:
@@ -39,14 +44,17 @@ class DeezerGraphBuilder:
             return None
 
     async def get_related_artists(self, artist_id):
+        # 関連アーティスト一覧を取得
         url = f"https://api.deezer.com/artist/{artist_id}/related"
         data = await self.fetch_json(url)
         return data.get("data", [])
 
     async def build_graph(self, root_artist_name, max_depth=3):
+        # グラフ構築メイン処理
         cache_path = self._cache_path(root_artist_name)
         print("[DEBUG] checking cache path:", cache_path)
 
+        # キャッシュがあれば読み込む
         if os.path.exists(cache_path):
             try:
                 print(f"[CACHE HIT] {cache_path}")
@@ -64,9 +72,10 @@ class DeezerGraphBuilder:
         if not root_id:
             raise ValueError("Artist not found")
 
+        # 深さ優先探索でノード構築
         await self._dfs(root_artist_name, root_id, 0, max_depth)
 
-        # 🔽 リンクに含まれているが nodes に存在しないノードを補完
+        # ノードに存在しないリンク先を補完
         all_ids = set(self.nodes.keys())
         linked_ids = set()
         for link in self.links:
@@ -76,10 +85,10 @@ class DeezerGraphBuilder:
         for missing_id in missing_ids:
             self.nodes[missing_id] = {
                 "deezer_id": None,
-                "depth": max_depth + 1  # fallback値
+                "depth": max_depth + 1
             }
 
-        # ノードサイズ設定
+        # ノードサイズを深さに応じて決定
         def get_size(level):
             return {0: 28, 1: 22, 2: 16}.get(level, 12)
 
@@ -96,7 +105,7 @@ class DeezerGraphBuilder:
             "links": self.links
         }
 
-        # キャッシュ保存
+        # 結果をキャッシュとして保存
         try:
             print("[DEBUG] result preview:")
             print(json.dumps(result, indent=2, ensure_ascii=False))
@@ -109,8 +118,8 @@ class DeezerGraphBuilder:
         await self.client.aclose()
         return result
 
-
     async def _dfs(self, name, artist_id, depth, max_depth):
+        # 深さ優先探索（非同期並列）
         if depth > max_depth or name in self.visited:
             return
         if len(self.nodes) >= self.max_nodes:

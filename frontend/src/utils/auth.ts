@@ -1,5 +1,3 @@
-// src/utils/auth.ts
-
 export const refreshAccessToken = async (): Promise<string | null> => {
   const refresh = localStorage.getItem("refresh");
   if (!refresh) return null;

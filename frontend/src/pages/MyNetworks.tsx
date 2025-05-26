@@ -1,15 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { authFetch } from "../utils/auth";
 
+type NetworkItem = {
+  id: number;
+  center_artist: string;
+  graph_json: any;
+  memo?: string;
+  image_base64: string;
+  created_at: string;
+};
+
 function SavedList() {
-  const [networks, setNetworks] = useState<any[]>([]);
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [networks, setNetworks] = useState<NetworkItem[]>([]);
+  const [selectedItem, setSelectedItem] = useState<NetworkItem | null>(null);
   const [editMemo, setEditMemo] = useState("");
-  const [isLoading, setIsLoading] = useState(true); // ← ローディング状態を追加
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true); // ← 読み込み開始
+      setIsLoading(true);
       const res = await authFetch("http://localhost:8000/api/my-networks/");
       if (res && res.ok) {
         const data = await res.json();
@@ -17,7 +26,7 @@ function SavedList() {
       } else {
         alert("保存されたネットワークの取得に失敗しました");
       }
-      setIsLoading(false); // ← 読み込み終了
+      setIsLoading(false);
     };
     fetchData();
   }, []);
@@ -35,7 +44,7 @@ function SavedList() {
     );
 
     if (res && res.ok) {
-      const updated = networks.map((item: any) =>
+      const updated = networks.map((item) =>
         item.id === selectedItem.id ? { ...item, memo: editMemo } : item
       );
       setNetworks(updated);
@@ -73,9 +82,9 @@ function SavedList() {
         <p>保存データがありません</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {networks.map((item: any, index: number) => (
+          {networks.map((item) => (
             <div
-              key={index}
+              key={item.id}
               className="bg-gray-800 rounded-xl p-4 shadow-lg hover:shadow-2xl transition cursor-pointer"
               onClick={() => {
                 setSelectedItem(item);
@@ -105,7 +114,10 @@ function SavedList() {
 
       {selectedItem && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
-          <div className="bg-gray-900 rounded-xl p-6 w-full max-w-3xl relative mx-4">
+          <div
+            className="bg-gray-900 rounded-xl p-6 w-full max-w-3xl relative mx-4"
+            onClick={(e) => e.stopPropagation()} // モーダル外クリック対策
+          >
             <button
               onClick={() => setSelectedItem(null)}
               className="absolute top-2 right-2 text-white text-xl hover:text-gray-300"

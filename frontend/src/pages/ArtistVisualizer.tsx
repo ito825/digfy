@@ -1,8 +1,12 @@
+// --- Import Section ---
 import React, { useEffect, useRef, useState } from "react";
 import ForceGraph2D from "react-force-graph-2d";
 import { Camera, Library, ZoomIn, ZoomOut, ScanSearch } from "lucide-react";
 import * as d3 from "d3";
+import { authFetch } from "../utils/auth";
+import toast from "react-hot-toast";
 
+// --- Type Definitions ---
 type NodeType = {
   id: string;
   color?: string;
@@ -18,7 +22,9 @@ type GraphDataType = {
   links: LinkType[];
 };
 
+// --- Main Component ---
 function ArtistVisualizer() {
+  // --- State Variables ---
   const [artist, setArtist] = useState("oasis");
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -27,12 +33,16 @@ function ArtistVisualizer() {
   );
   const [albumCoverUrl, setAlbumCoverUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const fgRef = useRef<any>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const [graphWidth, setGraphWidth] = useState(1000);
   const [hoverNode, setHoverNode] = useState<string | null>(null);
   const [showAllLinks, setShowAllLinks] = useState(false);
 
+  const fgRef = useRef<any>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [graphWidth, setGraphWidth] = useState(1000);
+  const [showModal, setShowModal] = useState(false);
+  const [memoInput, setMemoInput] = useState("");
+
+  // --- Window Resize Effect ---
   useEffect(() => {
     const updateWidth = () => {
       if (wrapperRef.current) {
@@ -41,9 +51,11 @@ function ArtistVisualizer() {
     };
     updateWidth();
     window.addEventListener("resize", updateWidth);
+    //Cleanup
     return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
+  // --- Graph Fetch & Setup ---
   const handleSubmit = async (
     e?: React.FormEvent | undefined,
     centerOverride?: string
@@ -62,10 +74,10 @@ function ArtistVisualizer() {
       const data = await response.json();
       if (response.ok) {
         const colorMap: Record<number, string> = {
-          0: "#c44569", // レベル0：ローズレッド（中心）
-          1: "#8e44ad", // レベル1：ディープパープル
-          2: "#3498db", // レベル2：ビビッドブルー
-          3: "#1abc9c", // レベル3：エメラルドグリーン
+          0: "#c44569",
+          1: "#8e44ad",
+          2: "#3498db",
+          3: "#1abc9c",
         };
 
         data.nodes = data.nodes.map((node: any) => ({
@@ -87,6 +99,8 @@ function ArtistVisualizer() {
       setIsLoading(false);
     }
   };
+
+  // --- Hover Effect ---
   const handleNodeHover = (node: any) => {
     if (node) {
       setHoverNode(node.id);
@@ -95,6 +109,7 @@ function ArtistVisualizer() {
     }
   };
 
+  // --- Image Download ---
   const downloadImage = () => {
     const canvas = document.querySelector("canvas");
     if (!canvas) return;
@@ -103,6 +118,8 @@ function ArtistVisualizer() {
     link.href = (canvas as HTMLCanvasElement).toDataURL("image/png");
     link.click();
   };
+
+  // --- Token Refresh ---
   const refreshToken = async () => {
     const refresh = localStorage.getItem("refresh");
     if (!refresh) return false;
@@ -121,12 +138,10 @@ function ArtistVisualizer() {
       return false;
     }
   };
-  const saveToLibrary = async () => {
-    try {
-      const memo = prompt("このネットワークに関するメモを入力してください:");
-      if (memo === null) return;
 
-      // Graph構造から不要なプロパティを削除
+  // --- Save Network to Library ---
+  const saveToLibrary = async (memo: string) => {
+    try {
       const cleanGraphData = JSON.parse(JSON.stringify(graphData));
       cleanGraphData.nodes.forEach((node: any) => {
         delete node.x;
@@ -137,22 +152,17 @@ function ArtistVisualizer() {
         delete node.fy;
       });
 
-      // Base64画像取得
       const canvas = document.querySelector("canvas") as HTMLCanvasElement;
       const image_base64 = canvas ? canvas.toDataURL("image/png") : "";
 
-      // トークンをリフレッシュ
       const ok = await refreshToken();
       if (!ok) {
         alert("ログインセッションが切れています。再ログインしてください。");
         return;
       }
-      const res = await fetch("http://localhost:8000/api/save-network/", {
+
+      const res = await authFetch("http://localhost:8000/api/save-network/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access")}`,
-        },
         body: JSON.stringify({
           center_artist: artist,
           graph_json: cleanGraphData,
@@ -164,9 +174,9 @@ function ArtistVisualizer() {
       const resData = await res.json();
       console.log("レスポンス内容:", resData);
       if (res.ok) {
-        alert("マイライブラリに保存しました！");
+        toast.success("マイライブラリに保存しました！");
       } else {
-        alert("保存に失敗しました: " + resData.error);
+        toast.error(" 保存に失敗しました: " + resData.error);
       }
     } catch (error) {
       console.error("保存エラー", error);
@@ -174,6 +184,7 @@ function ArtistVisualizer() {
     }
   };
 
+  // --- Deezer Preview Fetch ---
   const fetchDeezerPreview = async (artistName: string) => {
     try {
       const res1 = await fetch(
@@ -198,28 +209,25 @@ function ArtistVisualizer() {
     }
   };
 
+  // --- ForceGraph Forces ---
   useEffect(() => {
     if (fgRef.current) {
-      setTimeout(() => {
-        fgRef.current.zoom(3.0, 0); // 倍率, アニメーション時間(ms)
-        fgRef.current.centerAt(0, 0, 0); // 中央に合わせる（任意）
-      }, 300);
+      fgRef.current.d3Force("charge")?.strength(-100);
+      fgRef.current.d3Force("link")?.distance(160);
+      fgRef.current.d3Force(
+        "collide",
+        d3.forceCollide().radius(35).strength(1)
+      );
     }
   }, [graphData]);
 
+  // --- Zoom Initial Setup ---
   useEffect(() => {
     if (fgRef.current) {
-      // ノード間の引き離し力
-      fgRef.current.d3Force("charge")?.strength(-100);
-
-      // リンクの長さ（間隔）
-      fgRef.current.d3Force("link")?.distance(160);
-
-      // ノードが重ならないようにする
-      fgRef.current.d3Force(
-        "collide",
-        d3.forceCollide().radius(35).strength(1) //ノードサイズに合わせて衝突距離調整
-      );
+      setTimeout(() => {
+        fgRef.current.zoom(3.0, 0);
+        fgRef.current.centerAt(0, 0, 0);
+      }, 300);
     }
   }, [graphData]);
   return (
@@ -311,7 +319,7 @@ function ArtistVisualizer() {
               <Camera size={20} />
             </button>
             <button
-              onClick={saveToLibrary}
+              onClick={() => setShowModal(true)}
               className="p-2 bg-gray-700 text-white rounded-full hover:bg-gray-600 shadow"
               title="マイライブラリに保存"
             >
@@ -426,6 +434,37 @@ function ArtistVisualizer() {
             src={previewUrl}
             className="w-full max-w-md"
           />
+        </div>
+      )}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
+          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md shadow-lg relative">
+            <h2 className="text-xl font-bold mb-4">メモを保存</h2>
+            <textarea
+              value={memoInput}
+              onChange={(e) => setMemoInput(e.target.value)}
+              className="w-full h-32 p-2 rounded bg-gray-900 border border-gray-600 text-white mb-4"
+              placeholder="ネットワークに関するメモを入力..."
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded text-white"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={() => {
+                  saveToLibrary(memoInput);
+                  setShowModal(false);
+                  setMemoInput("");
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white"
+              >
+                保存する
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

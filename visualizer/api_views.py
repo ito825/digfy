@@ -9,6 +9,7 @@ import requests
 from django.views.decorators.csrf import csrf_exempt
 from .async_deezer import DeezerGraphBuilder
 import asyncio
+from rest_framework.permissions import AllowAny
 
 # -------------------- Related Artist API（キャッシュ付き） --------------------
 
@@ -117,28 +118,32 @@ class DeleteNetworkAPIView(APIView):
 
 # -------------------- Deezer API プロキシ --------------------
 
-@csrf_exempt
-def deezer_proxy(request):
-    artist_name = request.GET.get("q")
-    if not artist_name:
-        return JsonResponse({"error": "Missing 'q' parameter"}, status=400)
+class DeezerProxyView(APIView):
+    permission_classes = [AllowAny]
 
-    try:
-        deezer_url = f"https://api.deezer.com/search/artist?q={artist_name}"
-        res = requests.get(deezer_url)
-        return JsonResponse(res.json(), safe=False)
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+    def get(self, request):
+        artist_name = request.GET.get("q")
+        if not artist_name:
+            return Response({"error": "Missing 'q' parameter"}, status=400)
 
-@csrf_exempt
-def deezer_artist_top(request):
-    artist_id = request.GET.get("id")
-    if not artist_id:
-        return JsonResponse({"error": "Missing 'id' parameter"}, status=400)
+        try:
+            deezer_url = f"https://api.deezer.com/search/artist?q={artist_name}"
+            res = requests.get(deezer_url)
+            return Response(res.json())
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
 
-    try:
-        deezer_url = f"https://api.deezer.com/artist/{artist_id}/top?limit=1"
-        res = requests.get(deezer_url)
-        return JsonResponse(res.json(), safe=False)
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+class DeezerArtistTopView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        artist_id = request.GET.get("id")
+        if not artist_id:
+            return Response({"error": "Missing 'id' parameter"}, status=400)
+
+        try:
+            deezer_url = f"https://api.deezer.com/artist/{artist_id}/top?limit=1"
+            res = requests.get(deezer_url)
+            return Response(res.json())
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)

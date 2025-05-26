@@ -15,27 +15,42 @@ const Login: React.FC = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // --- ログイン処理 ---
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const response = await fetch("http://localhost:8000/api/token/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+    try {
+      const response = await fetch("http://localhost:8000/api/token/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (response.ok) {
-      localStorage.setItem("access", data.access);
-      localStorage.setItem("refresh", data.refresh);
+      if (response.ok) {
+        // トークンを保存
+        localStorage.setItem("access", data.access);
+        localStorage.setItem("refresh", data.refresh);
 
-      const decoded: DecodedToken = jwtDecode(data.access);
-      localStorage.setItem("username", decoded.username);
+        // アクセストークンをデコードしてユーザー名を保存
+        const decoded: DecodedToken = jwtDecode(data.access);
+        localStorage.setItem("username", decoded.username);
 
-      navigate("/");
-    } else {
-      setError(data.detail || "ログインに失敗しました");
+        navigate("/");
+      } else {
+        // 英語のエラーを日本語に変換
+        if (
+          data.detail === "No active account found with the given credentials"
+        ) {
+          setError("ユーザー名またはパスワードが間違っています");
+        } else {
+          setError(data.detail || "ログインに失敗しました");
+        }
+      }
+    } catch (err) {
+      // ネットワークエラー時のメッセージ
+      setError("サーバーに接続できませんでした");
     }
   };
 
@@ -51,7 +66,10 @@ const Login: React.FC = () => {
               type="text"
               placeholder="ユーザー名"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                setError("");
+              }}
               required
               className="w-full pl-10 pr-3 py-2 rounded bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -63,7 +81,10 @@ const Login: React.FC = () => {
               type="password"
               placeholder="パスワード"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError("");
+              }}
               required
               className="w-full pl-10 pr-3 py-2 rounded bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
