@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { authFetch } from "../utils/auth";
 
+const BASE_URL = process.env.REACT_APP_API_URL;
+
 type NetworkItem = {
   id: number;
   center_artist: string;
@@ -19,7 +21,7 @@ function SavedList() {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      const res = await authFetch("http://localhost:8000/api/my-networks/");
+      const res = await authFetch("${BASE_URL}/api/my-networks/");
       if (res && res.ok) {
         const data = await res.json();
         setNetworks(data);
@@ -35,7 +37,7 @@ function SavedList() {
     if (!selectedItem) return;
 
     const res = await authFetch(
-      `http://localhost:8000/api/update-network/${selectedItem.id}/`,
+      `${BASE_URL}/api/update-network/${selectedItem.id}/`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -60,7 +62,7 @@ function SavedList() {
     if (!confirmed) return;
 
     const res = await authFetch(
-      `http://localhost:8000/api/delete-network/${selectedItem.id}/`,
+      `${BASE_URL}/api/delete-network/${selectedItem.id}/`,
       { method: "DELETE" }
     );
 

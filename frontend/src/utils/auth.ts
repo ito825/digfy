@@ -2,7 +2,7 @@ export const refreshAccessToken = async (): Promise<string | null> => {
   const refresh = localStorage.getItem("refresh");
   if (!refresh) return null;
 
-  const response = await fetch("http://localhost:8000/api/token/refresh/", {
+  const response = await fetch("${BASE_URL}/api/token/refresh/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -6,6 +6,8 @@ import * as d3 from "d3";
 import { authFetch } from "../utils/auth";
 import toast from "react-hot-toast";
 
+const BASE_URL = process.env.REACT_APP_API_URL;
+
 // --- Type Definitions ---
 type NodeType = {
   id: string;
@@ -65,7 +67,7 @@ function ArtistVisualizer() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8000/api/graph-json/", {
+      const response = await fetch("${BASE_URL}/api/graph-json/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ artist: targetArtist, level: 2 }),
@@ -124,7 +126,7 @@ function ArtistVisualizer() {
     const refresh = localStorage.getItem("refresh");
     if (!refresh) return false;
 
-    const res = await fetch("http://localhost:8000/api/token/refresh/", {
+    const res = await fetch("${BASE_URL}/api/token/refresh/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh }),
@@ -161,7 +163,7 @@ function ArtistVisualizer() {
         return;
       }
 
-      const res = await authFetch("http://localhost:8000/api/save-network/", {
+      const res = await authFetch("${BASE_URL}/api/save-network/", {
         method: "POST",
         body: JSON.stringify({
           center_artist: artist,
@@ -188,15 +190,13 @@ function ArtistVisualizer() {
   const fetchDeezerPreview = async (artistName: string) => {
     try {
       const res1 = await fetch(
-        `http://localhost:8000/api/deezer/?q=${encodeURIComponent(artistName)}`
+        `${BASE_URL}/api/deezer/?q=${encodeURIComponent(artistName)}`
       );
       const data1 = await res1.json();
       if (!data1.data || data1.data.length === 0) return;
       const artistId = data1.data[0].id;
 
-      const res2 = await fetch(
-        `http://localhost:8000/api/deezer/top/?id=${artistId}`
-      );
+      const res2 = await fetch(`${BASE_URL}/api/deezer/top/?id=${artistId}`);
       const data2 = await res2.json();
       if (!data2.data || data2.data.length === 0) return;
 
