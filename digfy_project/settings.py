@@ -19,8 +19,8 @@ DEBUG = os.getenv("DEBUG", "True") == "True"
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "your-backend-service.onrender.com",  # ← Render用に追加
-    os.getenv("ALLOWED_HOST", ""),         # ← .envで上書きも可
+    "digfy-clean3.onrender.com",  # ← Render用に追加
+    os.getenv("ALLOWED_HOSTS", ""),         # ← .envで上書きも可
 ]
 
 # =======================
