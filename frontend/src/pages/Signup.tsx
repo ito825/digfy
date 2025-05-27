@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserPlus, Lock } from "lucide-react";
 
+const BASE_URL = process.env.REACT_APP_API_URL;
+
 const Signup: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -12,23 +14,26 @@ const Signup: React.FC = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const response = await fetch("${BASE_URL}/api/signup/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+    try {
+      const response = await fetch(`${BASE_URL}/api/signup/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
-    const data = await response.json();
+      const text = await response.text(); // JSONでなくても読めるようにする
+      const data = text ? JSON.parse(text) : {};
 
-    if (response.ok) {
-      // 成功メッセージを表示してから遷移
-      setSuccess("✅ 登録成功しました！ログイン画面へ移動します…");
-      setError("");
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
-    } else {
-      setError(data.detail || "サインアップに失敗しました");
+      if (response.ok) {
+        setSuccess("✅ 登録成功しました！ログイン画面へ移動します…");
+        setError("");
+        setTimeout(() => navigate("/login"), 1500);
+      } else {
+        setError(data.detail || "サインアップに失敗しました");
+      }
+    } catch (error) {
+      setError("通信エラーが発生しました");
+      console.error(error);
     }
   };
 
