@@ -17,12 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", "insecure-dev-key")  # Renderでは.envで設定
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "digfy-clean3.onrender.com",  # ← Render用に追加
-    os.getenv("ALLOWED_HOSTS", ""),         # ← .envで上書きも可
-]
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,digfy-clean3.onrender.com").split(",")
 
 # =======================
 # アプリケーション設定
