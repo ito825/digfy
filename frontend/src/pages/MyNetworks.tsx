@@ -21,7 +21,7 @@ function SavedList() {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      const res = await authFetch("${BASE_URL}/api/my-networks/");
+      const res = await authFetch(`${BASE_URL}/api/my-networks/`);
       if (res && res.ok) {
         const data = await res.json();
         setNetworks(data);
