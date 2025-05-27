@@ -25,31 +25,25 @@ export const refreshAccessToken = async (): Promise<string | null> => {
 };
 
 // 共通APIラッパー関数（fetch + 自動トークンリフレッシュ）
-export const authFetch = async (
-  url: string,
-  options: RequestInit = {},
-  retry = true
-): Promise<Response> => {
-  let access = localStorage.getItem("access");
+// utils/auth.ts
+export async function authFetch(url: string, options: RequestInit = {}) {
+  const token = localStorage.getItem("access");
 
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      ...(options.headers || {}),
-      "Content-Type": "application/json",
-      Authorization: access ? `Bearer ${access}` : "",
-    },
-  });
+  const headers: HeadersInit = {
+    ...options.headers,
+    Authorization: token ? `Bearer ${token}` : "",
+    "Content-Type": "application/json",
+  };
 
-  if (res.status === 401 && retry) {
-    const newAccess = await refreshAccessToken();
-    if (newAccess) {
-      return authFetch(url, options, false); // リトライ（1回まで）
-    } else {
-      alert("セッションが切れました。再ログインしてください。");
-      window.location.href = "/login";
-    }
+  const response = await fetch(url, { ...options, headers });
+
+  if (response.status === 401) {
+    alert("セッションが切れました。再度ログインしてください。");
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    window.location.href = "/login";
+    return null; // 呼び出し元が例外処理しやすくする
   }
 
-  return res;
-};
+  return response;
+}

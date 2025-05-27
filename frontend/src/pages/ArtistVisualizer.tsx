@@ -173,6 +173,11 @@ function ArtistVisualizer() {
         }),
       });
 
+      if (!res) {
+        alert("セッションが切れています。再ログインしてください。");
+        return;
+      }
+
       const resData = await res.json();
       console.log("レスポンス内容:", resData);
       if (res.ok) {
