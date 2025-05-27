@@ -17,8 +17,8 @@ from .api_views import DeleteNetworkAPIView
 from .api_views import DeezerProxyView, DeezerArtistTopView
 
 urlpatterns = [
-    path("api/signup/", SignupAPIView.as_view(), name="api_signup"), # サインアップページ
-    path('api/my-networks/', MyNetworksAPIView.as_view(), name='my_networks_api'),# 保存済みネットワーク一覧
+    path("api/signup/", SignupAPIView.as_view(), name="api_signup"), 
+    path('api/my-networks/', MyNetworksAPIView.as_view(), name='my_networks_api'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path("api/save-network/", SaveNetworkAPIView.as_view(), name="save_network"),
