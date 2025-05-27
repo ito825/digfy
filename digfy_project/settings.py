@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from pathlib import Path
 from datetime import timedelta
+import dj_database_url
 import os
 
 # .env 読み込み
@@ -83,13 +84,19 @@ WSGI_APPLICATION = "digfy_project.wsgi.application"
 # データベース設定
 # =======================
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",  # Render用にPostgreSQLに切り替えるならここ変更
-        "NAME": BASE_DIR / "db.sqlite3",
+if os.getenv("RENDER") == "true":
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=os.getenv("DATABASE_URL")
+        )
     }
-}
-
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 # =======================
 # 認証・JWT設定
 # =======================
