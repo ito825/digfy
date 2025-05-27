@@ -17,6 +17,7 @@ function SavedList() {
   const [selectedItem, setSelectedItem] = useState<NetworkItem | null>(null);
   const [editMemo, setEditMemo] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,11 +57,8 @@ function SavedList() {
     }
   };
 
-  const handleDelete = async () => {
+  const confirmDelete = async () => {
     if (!selectedItem) return;
-    const confirmed = window.confirm("本当に削除しますか？");
-    if (!confirmed) return;
-
     const res = await authFetch(
       `${BASE_URL}/api/delete-network/${selectedItem.id}/`,
       { method: "DELETE" }
@@ -69,6 +67,7 @@ function SavedList() {
     if (res && res.ok) {
       setNetworks(networks.filter((item) => item.id !== selectedItem.id));
       setSelectedItem(null);
+      setShowDeleteModal(false);
     } else {
       alert("削除に失敗しました");
     }
@@ -118,7 +117,7 @@ function SavedList() {
         <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
           <div
             className="bg-gray-900 rounded-xl p-6 w-full max-w-3xl relative mx-4"
-            onClick={(e) => e.stopPropagation()} // モーダル外クリック対策
+            onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setSelectedItem(null)}
@@ -149,7 +148,7 @@ function SavedList() {
 
             <div className="flex justify-between items-center">
               <button
-                onClick={handleDelete}
+                onClick={() => setShowDeleteModal(true)}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-white"
               >
                 削除
@@ -159,6 +158,33 @@ function SavedList() {
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white"
               >
                 保存
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center">
+          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-sm shadow-xl text-white">
+            <h2 className="text-xl font-bold mb-4 text-center">
+              本当に削除しますか？
+            </h2>
+            <p className="text-sm text-gray-300 mb-6 text-center">
+              「{selectedItem?.center_artist}」のネットワークを削除します。
+            </p>
+            <div className="flex justify-between">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-700"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 rounded bg-red-600 hover:bg-red-700"
+              >
+                削除する
               </button>
             </div>
           </div>
