@@ -1,20 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Menu, Home, LogIn, UserPlus, Library, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 const TopRightMenu = () => {
   const [open, setOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // 毎回描画時に取得
-  const token = localStorage.getItem("access");
-  const username = localStorage.getItem("username");
-  const isLoggedIn = !!token;
+  // ログイン状態を監視
+  useEffect(() => {
+    const token = localStorage.getItem("access");
+    const user = localStorage.getItem("username");
+    setIsLoggedIn(!!token);
+    setUsername(user);
+  }, [open]); // メニュー開閉のたびに状態確認
 
   const handleLogout = () => {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
     localStorage.removeItem("username");
+    setIsLoggedIn(false);
+    setUsername(null);
     navigate("/login");
   };
 
