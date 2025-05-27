@@ -28,6 +28,8 @@ const Signup: React.FC = () => {
         setSuccess("✅ 登録成功しました！ログイン画面へ移動します…");
         setError("");
         setTimeout(() => navigate("/login"), 1500);
+      } else if (data.detail) {
+        setError(data.detail);
       } else {
         setError(data.detail || "サインアップに失敗しました");
       }

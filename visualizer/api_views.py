@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .async_deezer import DeezerGraphBuilder
 import asyncio
 from rest_framework.permissions import AllowAny
+from .serializers import UserSignupSerializer
 
 # -------------------- Related Artist API（キャッシュ付き） --------------------
 
@@ -33,18 +34,14 @@ class RelatedGraphJSONAPIView(APIView):
 # -------------------- サインアップ --------------------
 
 class SignupAPIView(APIView):
+    permission_classes = [AllowAny]  # ← 明示しておくと安全
+
     def post(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
-
-        if not username or not password:
-            return Response({"error": "Missing credentials"}, status=status.HTTP_400_BAD_REQUEST)
-
-        if User.objects.filter(username=username).exists():
-            return Response({"error": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
-
-        user = User.objects.create_user(username=username, password=password)
-        return Response({"message": "User created"}, status=status.HTTP_201_CREATED)
+        serializer = UserSignupSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "ユーザー登録が完了しました"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # -------------------- マイライブラリ取得 --------------------
 
