@@ -26,24 +26,36 @@ export const refreshAccessToken = async (): Promise<string | null> => {
 
 // 共通APIラッパー関数（fetch + 自動トークンリフレッシュ）
 // utils/auth.ts
-export async function authFetch(url: string, options: RequestInit = {}) {
-  const token = localStorage.getItem("access");
+export const authFetch = async (url: string, options: RequestInit = {}) => {
+  const access = localStorage.getItem("access");
 
-  const headers: HeadersInit = {
-    ...options.headers,
-    Authorization: token ? `Bearer ${token}` : "",
-    "Content-Type": "application/json",
+  const fetchWithAuth = async (token: string | null) => {
+    return await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token ? `Bearer ${token}` : "",
+        ...(options.headers || {}),
+      },
+    });
   };
 
-  const response = await fetch(url, { ...options, headers });
+  let res = await fetchWithAuth(access);
 
-  if (response.status === 401) {
-    alert("セッションが切れました。再度ログインしてください。");
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
-    window.location.href = "/login";
-    return null; // 呼び出し元が例外処理しやすくする
+  // 401ならリフレッシュして再試行
+  if (res.status === 401) {
+    const newAccess = await refreshAccessToken();
+    if (newAccess) {
+      res = await fetchWithAuth(newAccess);
+    } else {
+      // リフレッシュ失敗 → ログアウト処理
+      localStorage.removeItem("access");
+      localStorage.removeItem("refresh");
+      localStorage.removeItem("username");
+      window.location.href = "/login";
+      return null;
+    }
   }
 
-  return response;
-}
+  return res;
+};
