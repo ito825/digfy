@@ -39,7 +39,7 @@ const Login: React.FC = () => {
         const decoded: DecodedToken = jwtDecode(data.access);
         localStorage.setItem("username", decoded.username);
 
-        navigate("/");
+        window.location.href = "/";
       } else {
         // 英語のエラーを日本語に変換
         if (
