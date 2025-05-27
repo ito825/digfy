@@ -1,8 +1,10 @@
+const BASE_URL = process.env.REACT_APP_API_URL;
+
 export const refreshAccessToken = async (): Promise<string | null> => {
   const refresh = localStorage.getItem("refresh");
   if (!refresh) return null;
 
-  const response = await fetch("${BASE_URL}/api/token/refresh/", {
+  const response = await fetch(`${BASE_URL}/api/token/refresh/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

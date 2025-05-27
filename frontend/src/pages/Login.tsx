@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { User, Lock } from "lucide-react";
 
+const BASE_URL = process.env.REACT_APP_API_URL;
+
 interface DecodedToken {
   username: string;
   exp: number;
@@ -20,7 +22,7 @@ const Login: React.FC = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch("${BASE_URL}/api/token/", {
+      const response = await fetch(`${BASE_URL}/api/token/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
