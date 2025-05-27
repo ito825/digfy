@@ -1,14 +1,17 @@
+// utils/auth.ts
+
 const BASE_URL = process.env.REACT_APP_API_URL;
 
+/**
+ * アクセストークンのリフレッシュ処理
+ */
 export const refreshAccessToken = async (): Promise<string | null> => {
   const refresh = localStorage.getItem("refresh");
   if (!refresh) return null;
 
   const response = await fetch(`${BASE_URL}/api/token/refresh/`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh }),
   });
 
@@ -24,13 +27,17 @@ export const refreshAccessToken = async (): Promise<string | null> => {
   }
 };
 
-// 共通APIラッパー関数（fetch + 自動トークンリフレッシュ）
-// utils/auth.ts
-export const authFetch = async (url: string, options: RequestInit = {}) => {
+/**
+ * 認証付き fetch。アクセストークンの自動更新つき
+ */
+export const authFetch = async (
+  url: string,
+  options: RequestInit = {}
+): Promise<Response | null> => {
   const access = localStorage.getItem("access");
 
-  const fetchWithAuth = async (token: string | null) => {
-    return await fetch(url, {
+  const fetchWithToken = async (token: string | null) => {
+    return fetch(url, {
       ...options,
       headers: {
         "Content-Type": "application/json",
@@ -40,15 +47,15 @@ export const authFetch = async (url: string, options: RequestInit = {}) => {
     });
   };
 
-  let res = await fetchWithAuth(access);
+  let res = await fetchWithToken(access);
 
-  // 401ならリフレッシュして再試行
+  // アクセストークンが切れてたらリフレッシュして再試行
   if (res.status === 401) {
     const newAccess = await refreshAccessToken();
     if (newAccess) {
-      res = await fetchWithAuth(newAccess);
+      res = await fetchWithToken(newAccess);
     } else {
-      // リフレッシュ失敗 → ログアウト処理
+      // リフレッシュ失敗 → ログアウト & リダイレクト
       localStorage.removeItem("access");
       localStorage.removeItem("refresh");
       localStorage.removeItem("username");
