@@ -41,20 +41,21 @@ function ArtistVisualizer() {
   const fgRef = useRef<any>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [graphWidth, setGraphWidth] = useState(1000);
+  const [graphHeight, setGraphHeight] = useState(600);
   const [showModal, setShowModal] = useState(false);
   const [memoInput, setMemoInput] = useState("");
 
   // --- Window Resize Effect ---
   useEffect(() => {
-    const updateWidth = () => {
+    const updateSize = () => {
       if (wrapperRef.current) {
         setGraphWidth(wrapperRef.current.offsetWidth);
+        setGraphHeight(wrapperRef.current.offsetHeight);
       }
     };
-    updateWidth();
-    window.addEventListener("resize", updateWidth);
-    //Cleanup
-    return () => window.removeEventListener("resize", updateWidth);
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
   }, []);
 
   // --- Graph Fetch & Setup ---
@@ -350,8 +351,8 @@ function ArtistVisualizer() {
 
         <ForceGraph2D
           ref={fgRef}
-          width={window.innerWidth * 0.9}
-          height={window.innerHeight * 0.8}
+          width={graphWidth}
+          height={graphHeight}
           backgroundColor="#1a202c"
           graphData={graphData}
           nodeLabel={(node: any) => node.id}
