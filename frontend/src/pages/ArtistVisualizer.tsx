@@ -27,7 +27,7 @@ type GraphDataType = {
 // --- Main Component ---
 function ArtistVisualizer() {
   // --- State Variables ---
-  const [artist, setArtist] = useState("oasis");
+  const [artist, setArtist] = useState("Oasis");
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [currentTrackTitle, setCurrentTrackTitle] = useState<string | null>(
@@ -237,7 +237,12 @@ function ArtistVisualizer() {
   }, [graphData]);
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-4 relative">
-      <h1 className="text-xl font-bold mb-2 mt-1">関連アーティストを可視化</h1>
+      <div className="text-center mb-4 mt-2">
+        <h1 className="text-3xl font-bold">digfy</h1>
+        <p className="text-sm text-gray-400 mt-1">
+          広がる音楽の地図を、あなたの耳と目で旅しよう
+        </p>
+      </div>
 
       <div className="w-full max-w-6xl flex flex-col items-center mb-0">
         <div className="flex items-center justify-center space-x-4">
