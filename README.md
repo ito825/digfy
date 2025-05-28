@@ -4,26 +4,31 @@
 
 ## 🔗 デモURL
 
-https://digfy.onrender.com
+[https://digfy.onrender.com](https://digfy.onrender.com)
 
 ## 📸 スクリーンショット
 
 ![image](https://github.com/user-attachments/assets/73e81130-1234-4dd8-ac3d-3d70d1cb5633)
 
-
 ## 🛠️ 使用技術
 
+* UIスタイリング: Tailwind CSS
+
 * フロントエンド: React (TypeScript), ForceGraph2D
+
 * バックエンド: Django REST Framework
+
 * 認証: JWT
+
 * DB: PostgreSQL (Render)
-* 外部API: Deezer API(音楽データ取得)
+
+* 外部API: Deezer API(音極データ取得)
 
 ## ✨ 主な機能
 
 * アーティスト名を検索して、関連アーティストのネットワークを描画(ログイン不要)
 * ノードをクリックして中心アーティストを切り替え可能
-* 現在再生中の曲（Now Playing）とアートワークを表示
+* 現在再生中の曲──Now Playing──とアートワークを表示
 * 探索結果を保存して、マイライブラリから再表示(マイライブラリ機能はログイン必須)
 * 各ネットワークに対して探索メモを追加・編集
 
@@ -52,11 +57,15 @@ REACT_APP_API_URL=https://your-backend-url.onrender.com/api
 
 ## 💡 工夫した点
 
-* ForceGraph2Dを用いてアーティストネットワークを視覚的に表示
-* 非同期データ取得時にスピナー表示でUXを向上
-* JWTを用いたログイン機能とユーザー別保存データ管理
-* SpotifyとDeezer両対応の抽象化されたAPI設計
-* モバイル表示への最適化（レスポンシブ対応）
+* React + ForceGraph2D で、ノードを動かせるインタラクティブなグラフを表示
+* Tailwind CSS を使ってシンプルで見やすいデザインを実現
+* React の非同期処理（Promise）を使って複数のAPIを並列に呼び出し、検索を高速化
+*  アーティスト検索時にスピナーを表示して、待機中もストレスのない操作感に
+* Django 側で API のレスポンスを整え、必要なデータだけを返すことで動作を軽くした
+* 同じアーティストを何度も検索しないようにキャッシュを使って、APIアクセスを減らした
+* JWT を使って、ユーザーごとに保存したネットワークやメモを安全に管理できるようにした
+* フロントとバックを別々のURLで動かすために、環境変数や CORS 設定を調整した
+* Render を使って、React と Django をそれぞれ自動デプロイできる構成にした
 
 ## 💬 作者
 
