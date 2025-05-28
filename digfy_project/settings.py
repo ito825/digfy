@@ -119,7 +119,7 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG  # 本番はFalseにして下で明示許可
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # ローカル開発用
-    "https://digfy.onrender.com",  # ← Render frontend URL
+    "https://digfy-frontend.onrender.com",  # ← Render frontend URL
 ]
 
 # =======================
