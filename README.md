@@ -8,7 +8,7 @@ https://digfy.onrender.com
 
 ## 📸 スクリーンショット
 
-![image](https://github.com/user-attachments/assets/bda4dd22-83b9-4c2d-b10c-b789ed5b4453)
+![image](https://github.com/user-attachments/assets/73e81130-1234-4dd8-ac3d-3d70d1cb5633)
 
 
 ## 🛠️ 使用技術
