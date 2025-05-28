@@ -22,7 +22,7 @@
 
 * DB: PostgreSQL (Render)
 
-* 外部API: Deezer API(音極データ取得)
+* 外部API: Deezer API(音楽データ取得)
 
 ## ✨ 主な機能
 
