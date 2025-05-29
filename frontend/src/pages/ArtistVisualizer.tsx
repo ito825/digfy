@@ -27,7 +27,7 @@ type GraphDataType = {
 // --- Main Component ---
 function ArtistVisualizer() {
   // --- State Variables ---
-  const [artist, setArtist] = useState("Oasis");
+  const [artist, setArtist] = useState("");
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [currentTrackTitle, setCurrentTrackTitle] = useState<string | null>(
@@ -66,6 +66,12 @@ function ArtistVisualizer() {
   ): Promise<void> => {
     if (e) e.preventDefault();
     let targetArtist = centerOverride || artist;
+
+    if (!targetArtist) {
+      toast.error("アーティスト名を入力してください");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -271,7 +277,7 @@ function ArtistVisualizer() {
               value={artist}
               onChange={(e) => setArtist(e.target.value)}
               className="px-3 py-1 rounded bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="アーティスト名"
+              placeholder="例：Oasis"
             />
             <button
               type="submit"
@@ -280,7 +286,6 @@ function ArtistVisualizer() {
               検索
             </button>
           </form>
-
           {previewUrl && currentTrackTitle && (
             <div className="bg-gray-800 p-3 rounded-xl shadow flex items-center space-x-4">
               {albumCoverUrl && (

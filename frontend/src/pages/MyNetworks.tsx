@@ -107,7 +107,7 @@ function SavedList() {
               </p>
               {item.path && item.path.length > 0 && (
                 <p className="text-sm text-green-400 mb-2">
-                  🔗 探索ルート：{item.path.join(" → ")}
+                  🔗 探索ルート：{item.path.filter(Boolean).join(" → ")}
                 </p>
               )}
 
