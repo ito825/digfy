@@ -64,10 +64,23 @@ function ArtistVisualizer() {
     centerOverride?: string
   ): Promise<void> => {
     if (e) e.preventDefault();
-    const targetArtist = centerOverride || artist;
+    let targetArtist = centerOverride || artist;
     setIsLoading(true);
 
     try {
+      // Deezer APIで正式名称を取得
+      const res1 = await fetch(
+        `${BASE_URL}/api/deezer/?q=${encodeURIComponent(targetArtist)}`
+      );
+      const data1 = await res1.json();
+      if (!data1.data || data1.data.length === 0) {
+        alert("アーティストが見つかりませんでした");
+        setIsLoading(false);
+        return;
+      }
+      targetArtist = data1.data[0].name;
+      setArtist(targetArtist);
+
       const response = await fetch(`${BASE_URL}/api/graph-json/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -89,7 +102,7 @@ function ArtistVisualizer() {
           fy: node.id === targetArtist ? 0 : undefined,
           color: colorMap[node.group] || "#a3a3a3",
         }));
-        setArtist(targetArtist);
+
         setGraphData(data);
         fetchDeezerPreview(targetArtist);
       } else {
