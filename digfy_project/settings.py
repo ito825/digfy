@@ -4,20 +4,24 @@ from datetime import timedelta
 import dj_database_url
 import os
 
-# .env 読み込み
-load_dotenv()
+
 
 # プロジェクトのベースディレクトリ
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# .env 読み込み
+load_dotenv(BASE_DIR / ".env")
+
+
 
 # =======================
 # セキュリティ設定
 # =======================
 
-SECRET_KEY = os.getenv("SECRET_KEY", "insecure-dev-key")  # Renderでは.envで設定
-DEBUG = os.getenv("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,digfy-clean3.onrender.com").split(",")
+DEBUG = os.getenv("DEBUG", "False") == "True"
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 
 # =======================
 # アプリケーション設定

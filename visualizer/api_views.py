@@ -120,6 +120,7 @@ class DeezerProxyView(APIView):
 
     def get(self, request):
         artist_name = request.GET.get("q")
+
         if not artist_name:
             return Response({"error": "Missing 'q' parameter"}, status=400)
 
@@ -129,6 +130,8 @@ class DeezerProxyView(APIView):
             return Response(res.json())
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+
+
 
 class DeezerArtistTopView(APIView):
     permission_classes = [AllowAny]
