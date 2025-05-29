@@ -11,6 +11,9 @@ from .async_deezer import DeezerGraphBuilder
 import asyncio
 from rest_framework.permissions import AllowAny
 from .serializers import UserSignupSerializer
+from .serializers import SavedNetworkSerializer
+
+
 
 # -------------------- Related Artist API（キャッシュ付き） --------------------
 
@@ -50,18 +53,8 @@ class MyNetworksAPIView(APIView):
 
     def get(self, request):
         items = SavedNetwork.objects.filter(user=request.user).order_by('-created_at')
-        data = [
-            {
-                "id": item.id,
-                "center_artist": item.center_artist,
-                "graph_json": item.graph_json,
-                "memo": item.memo,
-                "image_base64": item.image_base64,
-                "created_at": item.created_at,
-            }
-            for item in items
-        ]
-        return Response(data)
+        serializer = SavedNetworkSerializer(items, many=True)
+        return Response(serializer.data)
 
 # -------------------- 保存 --------------------
 
@@ -73,18 +66,23 @@ class SaveNetworkAPIView(APIView):
         graph_json = request.data.get("graph_json")
         memo = request.data.get("memo", "")
         image_base64 = request.data.get("image_base64", "")
+        path = request.data.get("path", [])
 
         if not center_artist or not graph_json:
             return Response({"error": "Missing data"}, status=400)
 
-        SavedNetwork.objects.create(
+        saved = SavedNetwork.objects.create(
             user=request.user,
             center_artist=center_artist,
             graph_json=graph_json,
             memo=memo,
-            image_base64=image_base64
+            image_base64=image_base64,  
+            path=path
         )
-        return Response({"message": "保存しました"}, status=201)
+
+        serializer = SavedNetworkSerializer(saved)
+        return Response(serializer.data, status=201)
+
 
 # -------------------- メモ更新 --------------------
 

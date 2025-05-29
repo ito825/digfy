@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.models import User
+from .models import SavedNetwork
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -26,3 +27,8 @@ class UserSignupSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
+# マイライブラリ保存
+class SavedNetworkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SavedNetwork
+        fields = ['id', 'center_artist', 'graph_json', 'memo', 'image_base64', 'path', 'created_at']

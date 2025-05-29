@@ -10,6 +10,7 @@ type NetworkItem = {
   memo?: string;
   image_base64: string;
   created_at: string;
+  path?: string[];
 };
 
 function SavedList() {
@@ -25,6 +26,7 @@ function SavedList() {
       const res = await authFetch(`${BASE_URL}/api/my-networks/`);
       if (res && res.ok) {
         const data = await res.json();
+        console.log("取得データ", data);
         setNetworks(data);
       } else {
         alert("保存されたネットワークの取得に失敗しました");
@@ -103,6 +105,12 @@ function SavedList() {
               <p className="text-sm text-gray-400 mb-2">
                 {new Date(item.created_at).toLocaleString()}
               </p>
+              {item.path && item.path.length > 0 && (
+                <p className="text-sm text-green-400 mb-2">
+                  🔗 探索ルート：{item.path.join(" → ")}
+                </p>
+              )}
+
               {item.memo && (
                 <p className="text-sm text-gray-300 whitespace-pre-wrap">
                   💬 {item.memo}

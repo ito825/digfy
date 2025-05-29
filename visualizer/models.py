@@ -7,6 +7,7 @@ class SavedNetwork(models.Model):
     graph_json = models.JSONField()
     memo = models.TextField(blank=True, null=True)
     image_base64 = models.TextField(blank=True, null=True)
+    path = models.JSONField(default=list) 
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

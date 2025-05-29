@@ -44,6 +44,7 @@ function ArtistVisualizer() {
   const [graphHeight, setGraphHeight] = useState(600);
   const [showModal, setShowModal] = useState(false);
   const [memoInput, setMemoInput] = useState("");
+  const [explorationPath, setExplorationPath] = useState<string[]>([artist]);
 
   // --- Window Resize Effect ---
   useEffect(() => {
@@ -80,7 +81,10 @@ function ArtistVisualizer() {
       }
       targetArtist = data1.data[0].name;
       setArtist(targetArtist);
-
+      setExplorationPath((prev) => {
+        if (prev[prev.length - 1] === targetArtist) return prev;
+        return [...prev, targetArtist];
+      });
       const response = await fetch(`${BASE_URL}/api/graph-json/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -184,6 +188,7 @@ function ArtistVisualizer() {
           graph_json: cleanGraphData,
           memo: memo,
           image_base64: image_base64,
+          path: explorationPath,
         }),
       });
 
@@ -407,6 +412,7 @@ function ArtistVisualizer() {
           onNodeClick={(node, event) => {
             if (!node || !event) return;
             setArtist(node.id);
+            setExplorationPath((prev) => [...prev, node.id]); //経路追加
             handleSubmit(undefined, node.id);
           }}
         />
