@@ -2,7 +2,7 @@
 
 音楽アーティストの関連性を可視化し、没入感のある音楽ディグ体験ができる Web アプリケーションです。
 
-## 🔗 デモURL
+## 🔗 デモ動画
 
 https://github.com/user-attachments/assets/9c9af5c6-c065-441d-9ac1-116ca003021c
 
