@@ -296,7 +296,7 @@ function ArtistVisualizer() {
                 }
               }}
               className="px-3 py-1 rounded bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Oasis, SPITZ, King Gnu"
+              placeholder="Oasis, Spitz, King Gnu"
             />
             <button
               type="submit"
