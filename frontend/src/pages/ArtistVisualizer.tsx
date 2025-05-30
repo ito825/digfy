@@ -372,7 +372,14 @@ function ArtistVisualizer() {
               <Camera size={20} />
             </button>
             <button
-              onClick={() => setShowModal(true)}
+              onClick={() => {
+                const access = localStorage.getItem("access");
+                if (!access) {
+                  toast("保存するにはログインが必要です");
+                  return;
+                }
+                setShowModal(true);
+              }}
               className="p-2 bg-gray-700 text-white rounded-full hover:bg-gray-600 shadow"
               title="マイライブラリに保存"
             >
