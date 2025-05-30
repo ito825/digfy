@@ -45,6 +45,7 @@ function ArtistVisualizer() {
   const [showModal, setShowModal] = useState(false);
   const [memoInput, setMemoInput] = useState("");
   const [explorationPath, setExplorationPath] = useState<string[]>([artist]);
+  const [hasShownToast, setHasShownToast] = useState(false);
 
   // --- Window Resize Effect ---
   useEffect(() => {
@@ -275,9 +276,27 @@ function ArtistVisualizer() {
             <input
               type="text"
               value={artist}
-              onChange={(e) => setArtist(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setArtist(value);
+
+                const japaneseRegex = /[一-龯ぁ-んァ-ン]/;
+                if (japaneseRegex.test(value) && !hasShownToast) {
+                  toast.custom((t) => (
+                    <div
+                      className={`${
+                        t.visible ? "animate-enter" : "animate-leave"
+                      } max-w-md w-full bg-gray-800 text-white shadow-lg rounded-lg px-4 py-3`}
+                    >
+                      一部の日本語表記は検索でヒットしないことがあります。
+                    </div>
+                  ));
+                  setHasShownToast(true);
+                  setTimeout(() => setHasShownToast(false), 5000); // ← 一定時間後に再表示許可
+                }
+              }}
               className="px-3 py-1 rounded bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="例：Oasis"
+              placeholder="Oasis, SPITZ, King Gnu"
             />
             <button
               type="submit"
