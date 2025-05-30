@@ -82,7 +82,7 @@ function ArtistVisualizer() {
       );
       const data1 = await res1.json();
       if (!data1.data || data1.data.length === 0) {
-        alert("アーティストが見つかりませんでした");
+        toast.error("アーティストが見つかりませんでした");
         setIsLoading(false);
         return;
       }
@@ -275,6 +275,7 @@ function ArtistVisualizer() {
           <form onSubmit={handleSubmit} className="flex items-center space-x-2">
             <input
               type="text"
+              maxLength={100}
               value={artist}
               onChange={(e) => {
                 const value = e.target.value;
@@ -502,6 +503,7 @@ function ArtistVisualizer() {
           <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md shadow-lg relative">
             <h2 className="text-xl font-bold mb-4">メモを保存</h2>
             <textarea
+              maxLength={300}
               value={memoInput}
               onChange={(e) => setMemoInput(e.target.value)}
               className="w-full h-32 p-2 rounded bg-gray-900 border border-gray-600 text-white mb-4"

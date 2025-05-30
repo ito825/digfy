@@ -19,6 +19,7 @@ function SavedList() {
   const [editMemo, setEditMemo] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showFullPath, setShowFullPath] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -105,14 +106,53 @@ function SavedList() {
               <p className="text-sm text-gray-400 mb-2">
                 {new Date(item.created_at).toLocaleString()}
               </p>
+              {selectedItem?.path && selectedItem.path.length > 0 && (
+                <div className="text-sm text-green-400 mb-4 whitespace-pre-wrap break-words">
+                  🔗 探索ルート：
+                  <span
+                    className="cursor-pointer underline"
+                    onClick={() => setShowFullPath(!showFullPath)}
+                    title="クリックで展開/折りたたみ"
+                  >
+                    {showFullPath
+                      ? selectedItem.path.filter(Boolean).join(" → ")
+                      : selectedItem.path
+                          .slice(0, 5)
+                          .filter(Boolean)
+                          .join(" → ") + " → ..."}
+                  </span>
+                </div>
+              )}
               {item.path && item.path.length > 0 && (
-                <p className="text-sm text-green-400 mb-2">
-                  🔗 探索ルート：{item.path.filter(Boolean).join(" → ")}
+                <p
+                  className="text-sm text-green-400 mb-2"
+                  style={{
+                    display: "-webkit-box",
+                    WebkitBoxOrient: "vertical",
+                    WebkitLineClamp: 3,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                  title={`探索ルート：${item.path
+                    ?.filter(Boolean)
+                    .join(" → ")}`}
+                >
+                  🔗 探索ルート：{item.path?.filter(Boolean).join(" → ")}
                 </p>
               )}
 
               {item.memo && (
-                <p className="text-sm text-gray-300 whitespace-pre-wrap">
+                <p
+                  style={{
+                    display: "-webkit-box",
+                    WebkitBoxOrient: "vertical",
+                    WebkitLineClamp: 3,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "normal",
+                    wordBreak: "break-word",
+                  }}
+                >
                   💬 {item.memo}
                 </p>
               )}
@@ -145,6 +185,25 @@ function SavedList() {
               {new Date(selectedItem.created_at).toLocaleString()}
             </p>
 
+            {/* 🔗 探索ルート表示（開閉式） */}
+            {selectedItem.path && selectedItem.path.length > 0 && (
+              <div className="text-sm text-green-400 mb-4 whitespace-pre-wrap break-words">
+                🔗 探索ルート：
+                <span
+                  className="cursor-pointer underline"
+                  onClick={() => setShowFullPath(!showFullPath)}
+                  title="クリックで展開/折りたたみ"
+                >
+                  {showFullPath
+                    ? selectedItem.path.filter(Boolean).join(" → ")
+                    : selectedItem.path
+                        .slice(0, 5)
+                        .filter(Boolean)
+                        .join(" → ") + " → ..."}
+                </span>
+              </div>
+            )}
+
             <label className="block text-sm text-gray-400 mb-1">
               💬 メモを編集：
             </label>
@@ -152,6 +211,7 @@ function SavedList() {
               className="w-full p-2 rounded bg-gray-800 border border-gray-600 text-white resize-none h-24 mb-4"
               value={editMemo}
               onChange={(e) => setEditMemo(e.target.value)}
+              maxLength={300}
             />
 
             <div className="flex justify-between items-center">
