@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 
-// --- Type Definitions ---
+//  --- 型定義 ---
 type NodeType = {
   id: string;
   color?: string;
@@ -26,7 +26,7 @@ type GraphDataType = {
 
 // --- Main Component ---
 function ArtistVisualizer() {
-  // --- State Variables ---
+  // --- ステート管理 ---
   const [artist, setArtist] = useState("");
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -47,7 +47,7 @@ function ArtistVisualizer() {
   const [explorationPath, setExplorationPath] = useState<string[]>([artist]);
   const [hasShownToast, setHasShownToast] = useState(false);
 
-  // --- Window Resize Effect ---
+  // --- ウィンドウリサイズ時のサイズ更新  ---
   useEffect(() => {
     const updateSize = () => {
       if (wrapperRef.current) {
@@ -60,7 +60,7 @@ function ArtistVisualizer() {
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  // --- Graph Fetch & Setup ---
+  // --- グラフの取得と設定 ---
   const handleSubmit = async (
     e?: React.FormEvent | undefined,
     centerOverride?: string
@@ -100,13 +100,14 @@ function ArtistVisualizer() {
 
       const data = await response.json();
       if (response.ok) {
+        // ノードの色設定
         const colorMap: Record<number, string> = {
           0: "#c44569",
           1: "#8e44ad",
           2: "#3498db",
           3: "#1abc9c",
         };
-
+        // ノード情報の整形と中心固定
         data.nodes = data.nodes.map((node: any) => ({
           ...node,
           fx: node.id === targetArtist ? 0 : undefined,
@@ -127,16 +128,7 @@ function ArtistVisualizer() {
     }
   };
 
-  // --- Hover Effect ---
-  const handleNodeHover = (node: any) => {
-    if (node) {
-      setHoverNode(node.id);
-    } else {
-      setHoverNode(null);
-    }
-  };
-
-  // --- Image Download ---
+  // --- グラフ画像をPNGで保存 ---
   const downloadImage = () => {
     const canvas = document.querySelector("canvas");
     if (!canvas) return;
@@ -166,7 +158,7 @@ function ArtistVisualizer() {
     }
   };
 
-  // --- Save Network to Library ---
+  // --- マイライブラリへ保存 ---
   const saveToLibrary = async (memo: string) => {
     try {
       const cleanGraphData = JSON.parse(JSON.stringify(graphData));
@@ -252,7 +244,7 @@ function ArtistVisualizer() {
     }
   }, [graphData]);
 
-  // --- Zoom Initial Setup ---
+  // --- グラフ初期ズーム設定（表示時に中心拡大） ---
   useEffect(() => {
     if (fgRef.current) {
       setTimeout(() => {
@@ -293,7 +285,7 @@ function ArtistVisualizer() {
                     </div>
                   ));
                   setHasShownToast(true);
-                  setTimeout(() => setHasShownToast(false), 5000); // ← 一定時間後に再表示許可
+                  setTimeout(() => setHasShownToast(false), 5000);
                 }
               }}
               className="px-3 py-1 rounded bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"

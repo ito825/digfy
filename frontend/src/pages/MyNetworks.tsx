@@ -3,6 +3,7 @@ import { authFetch } from "../utils/auth";
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 
+// --- 型定義 ---
 type NetworkItem = {
   id: number;
   center_artist: string;
@@ -14,6 +15,7 @@ type NetworkItem = {
 };
 
 function SavedList() {
+  // --- ステート管理 ---
   const [networks, setNetworks] = useState<NetworkItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<NetworkItem | null>(null);
   const [editMemo, setEditMemo] = useState("");
@@ -21,6 +23,7 @@ function SavedList() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showFullPath, setShowFullPath] = useState(false);
 
+  // --- データ取得（初回マウント時） ---
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -37,6 +40,7 @@ function SavedList() {
     fetchData();
   }, []);
 
+  // --- メモ保存処理 ---
   const handleSaveMemo = async () => {
     if (!selectedItem) return;
 
@@ -60,8 +64,10 @@ function SavedList() {
     }
   };
 
+  // --- 削除処理 ---
   const confirmDelete = async () => {
     if (!selectedItem) return;
+
     const res = await authFetch(
       `${BASE_URL}/api/delete-network/${selectedItem.id}/`,
       { method: "DELETE" }
@@ -76,10 +82,12 @@ function SavedList() {
     }
   };
 
+  // --- メインレンダリング ---
   return (
     <div className="p-6 min-h-screen bg-gray-900 text-white">
       <h1 className="text-3xl font-bold mb-6">マイライブラリ</h1>
 
+      {/* --- ローディング or データ表示 --- */}
       {isLoading ? (
         <p className="text-gray-400">読み込み中...</p>
       ) : networks.length === 0 ? (
@@ -95,34 +103,22 @@ function SavedList() {
                 setEditMemo(item.memo || "");
               }}
             >
+              {/* --- サムネイル --- */}
               <img
                 src={item.image_base64}
                 alt="保存されたグラフ"
                 className="rounded-lg border border-gray-700 mb-4 w-full h-40 object-cover"
               />
+
+              {/* --- タイトル・作成日時 --- */}
               <h2 className="text-lg font-semibold mb-1">
                 {item.center_artist}
               </h2>
               <p className="text-sm text-gray-400 mb-2">
                 {new Date(item.created_at).toLocaleString()}
               </p>
-              {selectedItem?.path && selectedItem.path.length > 0 && (
-                <div className="text-sm text-green-400 mb-4 whitespace-pre-wrap break-words">
-                  🔗 探索ルート：
-                  <span
-                    className="cursor-pointer underline"
-                    onClick={() => setShowFullPath(!showFullPath)}
-                    title="クリックで展開/折りたたみ"
-                  >
-                    {showFullPath
-                      ? selectedItem.path.filter(Boolean).join(" → ")
-                      : selectedItem.path
-                          .slice(0, 5)
-                          .filter(Boolean)
-                          .join(" → ") + " → ..."}
-                  </span>
-                </div>
-              )}
+
+              {/* --- 探索ルート（省略表示） --- */}
               {item.path && item.path.length > 0 && (
                 <p
                   className="text-sm text-green-400 mb-2"
@@ -133,14 +129,13 @@ function SavedList() {
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                   }}
-                  title={`探索ルート：${item.path
-                    ?.filter(Boolean)
-                    .join(" → ")}`}
+                  title={`探索ルート：${item.path.filter(Boolean).join(" → ")}`}
                 >
-                  🔗 探索ルート：{item.path?.filter(Boolean).join(" → ")}
+                  🔗 探索ルート：{item.path.filter(Boolean).join(" → ")}
                 </p>
               )}
 
+              {/* --- メモ（省略表示） --- */}
               {item.memo && (
                 <p
                   style={{
@@ -161,18 +156,22 @@ function SavedList() {
         </div>
       )}
 
+      {/* --- 詳細モーダル --- */}
       {selectedItem && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
           <div
             className="bg-gray-900 rounded-xl p-6 w-full max-w-3xl relative mx-4"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* 閉じるボタン */}
             <button
               onClick={() => setSelectedItem(null)}
               className="absolute top-2 right-2 text-white text-xl hover:text-gray-300"
             >
               ×
             </button>
+
+            {/* --- 詳細内容 --- */}
             <img
               src={selectedItem.image_base64}
               alt="拡大画像"
@@ -185,7 +184,7 @@ function SavedList() {
               {new Date(selectedItem.created_at).toLocaleString()}
             </p>
 
-            {/* 🔗 探索ルート表示（開閉式） */}
+            {/* --- 探索ルート（開閉可能） --- */}
             {selectedItem.path && selectedItem.path.length > 0 && (
               <div className="text-sm text-green-400 mb-4 whitespace-pre-wrap break-words">
                 🔗 探索ルート：
@@ -196,14 +195,18 @@ function SavedList() {
                 >
                   {showFullPath
                     ? selectedItem.path.filter(Boolean).join(" → ")
-                    : selectedItem.path
-                        .slice(0, 5)
-                        .filter(Boolean)
-                        .join(" → ") + " → ..."}
+                    : (() => {
+                        const path = selectedItem.path.filter(Boolean);
+                        const shortened = path.slice(0, 5).join(" → ");
+                        return path.length > 5
+                          ? shortened + " → ..."
+                          : shortened;
+                      })()}
                 </span>
               </div>
             )}
 
+            {/* --- メモ編集 --- */}
             <label className="block text-sm text-gray-400 mb-1">
               💬 メモを編集：
             </label>
@@ -214,6 +217,7 @@ function SavedList() {
               maxLength={300}
             />
 
+            {/* --- 保存・削除ボタン --- */}
             <div className="flex justify-between items-center">
               <button
                 onClick={() => setShowDeleteModal(true)}
@@ -232,6 +236,7 @@ function SavedList() {
         </div>
       )}
 
+      {/* --- 削除確認モーダル --- */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center">
           <div className="bg-gray-800 p-6 rounded-xl w-full max-w-sm shadow-xl text-white">
