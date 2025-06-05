@@ -27,6 +27,8 @@
 保存したネットワークの一覧を表示し、メモ編集・再表示・削除が可能。
 
 ![image](https://github.com/user-attachments/assets/0f629009-8808-4853-ad69-64b1d36f422f)
+![image](https://github.com/user-attachments/assets/6c384d7a-4c40-47b0-bc2a-6be186f342aa)
+
 
 ## 🛠️ 使用技術
 
