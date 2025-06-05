@@ -66,8 +66,3 @@ REACT_APP_API_URL=https://your-backend-url.onrender.com/api
 * 同じアーティストを何度も検索しないようにキャッシュを使って、APIアクセスを減らした
 * JWT を使って、ユーザーごとに保存したネットワークやメモを安全に管理できるようにした
 * Render を使って、React と Django をそれぞれ自動デプロイできる構成にした
-
-## 💬 作者
-
-* GitHub: [@ito825](https://github.com/ito825)
-* ポートフォリオ用途の個人開発プロジェクト
